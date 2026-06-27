@@ -91,16 +91,23 @@
 
   /* hero visual: layered stage card + floating proof */
   .hero-visual{position:relative;z-index:2}
-  .stage{position:relative;border-radius:26px;overflow:hidden;color:#fff;
-    background:linear-gradient(165deg,var(--violet-ink),var(--violet-deep) 55%,#52207140);
-    border:1px solid rgba(255,255,255,.1);box-shadow:0 50px 90px -45px rgba(28,11,40,.8);
-    padding:38px 28px 32px;min-height:340px;display:flex;flex-direction:column;justify-content:flex-end}
-  .stage .beam{position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:300px;height:300px;
-    background:radial-gradient(circle,rgba(255,219,89,.4),transparent 64%);filter:blur(8px)}
-  .stage .mic{position:absolute;top:26px;right:26px;font-size:24px;opacity:.85}
-  .stage-tag{position:relative;font-size:11.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--yellow-soft);font-weight:700}
-  .stage h3{position:relative;font-size:clamp(28px,5vw,40px);color:#fff;margin:12px 0 8px}
-  .stage p{position:relative;color:rgba(255,255,255,.74);max-width:420px;font-size:15px}
+  /* hero video */
+  .vstage{position:relative;border-radius:26px;overflow:hidden;background:#000;
+    border:1px solid rgba(255,255,255,.12);box-shadow:0 50px 90px -45px rgba(28,11,40,.8);
+    aspect-ratio:9/16;max-height:600px;margin:0 auto}
+  .vstage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+  .vstage .vtag{position:absolute;top:14px;left:14px;z-index:4;display:inline-flex;align-items:center;gap:7px;
+    background:rgba(28,11,40,.6);backdrop-filter:blur(6px);color:#fff;font-size:11px;font-weight:700;
+    letter-spacing:.12em;text-transform:uppercase;padding:7px 12px;border-radius:100px;border:1px solid rgba(255,255,255,.18)}
+  .vstage .vtag .dot{width:7px;height:7px;border-radius:50%;background:var(--yellow);animation:pl 2.2s infinite}
+  .vstage .unmute{position:absolute;bottom:14px;right:14px;z-index:4;width:46px;height:46px;border-radius:50%;
+    border:1px solid rgba(255,255,255,.25);background:rgba(28,11,40,.55);backdrop-filter:blur(6px);color:#fff;
+    display:grid;place-items:center;cursor:pointer;transition:transform 160ms var(--ease-out)}
+  .vstage .unmute:active{transform:scale(.9)}
+  .vstage .unmute svg{width:20px;height:20px}
+  /* brand-styled subtitles */
+  .vstage video::cue{font-family:'Plus Jakarta Sans',sans-serif;font-size:.92em;font-weight:700;
+    background:rgba(28,11,40,.72);color:#fff;line-height:1.3}
   .floatcard{position:absolute;background:var(--paper);border:1px solid var(--line);border-radius:16px;
     padding:13px 16px;box-shadow:0 24px 50px -24px rgba(28,11,40,.45);z-index:3}
   .fc-rating{right:-12px;top:30px;display:flex;align-items:center;gap:10px}
@@ -314,11 +321,15 @@
     </div>
 
     <div class="hero-visual">
-      <div class="stage">
-        <span class="beam"></span><span class="mic">🎤</span>
-        <span class="stage-tag">★ Vendredi 31 juillet — Demo Day</span>
-        <h3>Il monte sur scène.<br>Vous le filmez.</h3>
-        <p>Pitch devant un jury, remise des diplômes, photos & vidéos — avec vous dans la salle.</p>
+      <div class="vstage">
+        <span class="vtag"><span class="dot"></span> Mission Fondateur · Rabat</span>
+        <video id="heroVideo" muted autoplay loop playsinline preload="auto" poster="">
+          <source src="assets/mission-fondateur.mp4" type="video/mp4" />
+          <track id="heroSubs" kind="subtitles" srclang="fr" label="Français" src="assets/mission-fondateur-fr.vtt" default />
+        </video>
+        <button class="unmute" id="unmuteBtn" aria-label="Activer le son">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+        </button>
       </div>
       <div class="floatcard fc-rating">
         <div class="num">4.8</div>
@@ -647,6 +658,18 @@
       el.style.transitionDelay=(Math.min(i,6)*55)+'ms';el.classList.add('in');io.unobserve(el);}));
   },{threshold:.14,rootMargin:'0px 0px -8% 0px'});
   document.querySelectorAll('.rv').forEach(el=>io.observe(el));
+
+  // hero video: force French subtitles to show, and wire unmute toggle
+  (function(){
+    var v=document.getElementById('heroVideo'), btn=document.getElementById('unmuteBtn');
+    if(!v) return;
+    function showSubs(){ try{ var t=v.textTracks&&v.textTracks[0]; if(t) t.mode='showing'; }catch(e){} }
+    v.addEventListener('loadedmetadata',showSubs); showSubs();
+    v.addEventListener('play',showSubs);
+    var on='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+    var off='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
+    if(btn){ btn.addEventListener('click',function(){ v.muted=!v.muted; if(v.paused) v.play(); btn.innerHTML=v.muted?off:on; btn.setAttribute('aria-label',v.muted?'Activer le son':'Couper le son'); showSubs(); }); }
+  })();
 </script>
 </body>
 </html>
